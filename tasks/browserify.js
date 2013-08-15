@@ -40,6 +40,10 @@ module.exports = function (grunt) {
       });
 
       if (opts.ignore) {
+        grunt.log.debug('');
+        grunt.log.debug('ignore:');
+        grunt.log.debug(JSON.stringify(opts.ignore, null, 2));
+
         grunt.file.expand({nonull: true}, opts.ignore)
           .forEach(function (file) {
             var ignoreFile = file;
@@ -57,6 +61,9 @@ module.exports = function (grunt) {
       }
 
       if (opts.alias) {
+        grunt.log.debug('');
+        grunt.log.debug('aliases:');
+
         aliases = opts.alias;
         if (aliases.split) {
           aliases = aliases.split(',');
@@ -80,34 +87,47 @@ module.exports = function (grunt) {
             aliasDest = aliasSrc;
           }
 
+          grunt.log.debug(aliasSrc + ' : ' + aliasDest);
           b.require(aliasSrc, {expose: aliasDest});
         });
       }
 
       if (opts.aliasMappings) {
         aliases = opts.aliasMappings.slice ? opts.aliasMappings : [opts.aliasMappings];
+        grunt.log.debug('');
+        grunt.log.debug('aliasMappings:');
+
         aliases.forEach(function (alias) {
           alias.expand = true; // so the user doesn't have to specify
           grunt.file.expandMapping(alias.src, alias.dest, alias)
             .forEach(function (file) {
               var expose = file.dest.substr(0, file.dest.lastIndexOf('.'));
+              grunt.log.debug(path.resolve(file.src[0]) + ' : ' + expose);
               b.require(path.resolve(file.src[0]), {expose: expose});
             });
         });
       }
 
       if (opts.shim) {
+        grunt.log.debug('');
+        grunt.log.debug('shim:');
+
         shims = opts.shim;
         Object.keys(shims)
           .forEach(function (alias) {
             shims[alias].path = path.resolve(shims[alias].path);
           });
+        grunt.log.debug(JSON.stringify(shims, null, 2));
         b = shim(b, shims);
       }
 
       if (opts.external) {
         var externalFiles = [];
         var externalModules = [];
+
+        grunt.log.debug('');
+        grunt.log.debug('external:');
+
         opts.external.forEach(function (external) {
           if (/\//.test(external)) {
             var expandedExternals = grunt.file.expand(external);
@@ -116,18 +136,22 @@ module.exports = function (grunt) {
                 var externalResolved = path.resolve(dest);
                 if (grunt.file.exists(externalResolved)) {
                   externalFiles.push(externalResolved);
+                  grunt.log.debug(externalResolved);
                 }
                 else {
                   externalModules.push(dest);
+                  grunt.log.debug(dest);
                 }
               });
             }
             else {
               externalModules.push(external);
+              grunt.log.debug(external);
             }
           }
           else {
             externalModules.push(external);
+            grunt.log.debug(external);
           }
         });
 
