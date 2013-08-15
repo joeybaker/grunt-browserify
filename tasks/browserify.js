@@ -114,18 +114,22 @@ module.exports = function (grunt) {
             if (expandedExternals.length > 0) {
               expandedExternals.forEach(function (dest) {
                 var externalResolved = path.resolve(dest)
-                if (grunt.file.exists(externalResolved)) {
+                // if we found the file, that's our external
+                if (grunt.file.exists(externalResolved) && grunt.file.isFile(externalResolved) {
                   externalFiles.push(externalResolved);
                 }
+                // if the file doesn't exist, then it's a module
                 else {
                   externalModules.push(dest);
                 }
               });
             }
+            // if expansion failed, the external is a module
             else {
               externalModules.push(external);
             }
           }
+          // if there's no slash in the name, this is a module, not a file
           else {
             externalModules.push(external);
           }
