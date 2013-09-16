@@ -62,7 +62,7 @@ module.exports = function (grunt) {
           aliases = aliases.split(',');
         }
 
-        aliases = grunt.util._.flatten(aliases)
+        aliases = grunt.util._.flatten(aliases);
 
         aliases.forEach(function (alias) {
           alias = alias.split(':');
@@ -122,7 +122,7 @@ module.exports = function (grunt) {
             if (expandedExternals.length > 0) {
               expandedExternals.forEach(function (dest) {
                 var externalResolved = path.resolve(dest);
-                if (grunt.file.exists(externalResolved)) {
+                if (grunt.file.exists(externalResolved) && grunt.file.isFile(externalResolved)) {
                   externalFiles.push(externalResolved);
                 }
                 else {
