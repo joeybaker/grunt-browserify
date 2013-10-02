@@ -91,6 +91,14 @@ module.exports = function (grunt) {
         }
       },
 
+      extentions: {
+        src: ['test/fixtures/extensions/extension.js'],
+        dest: 'tmp/extensions.js',
+        options: {
+          extensions: ['.js', '.fjs']
+        }
+      },
+
       noParse: {
         src: ['test/fixtures/noParse/*.js'],
         dest: 'tmp/noParse.js',
@@ -112,11 +120,50 @@ module.exports = function (grunt) {
         }
       },
 
+      shimMulti: {
+        files: {
+          'tmp/shim-a.js': ['test/fixtures/shim/a.js', 'test/fixtures/shim/shim.js'],
+          'tmp/shim-b.js': ['test/fixtures/shim/a.js', 'test/fixtures/shim/shim.js']
+        },
+        options: {
+          shim: {
+            shimmedJQ: {
+              path: 'test/fixtures/shim/jquery.js',
+              exports: '$'
+            }
+          }
+        }
+      },
+
+      shimNoParse: {
+        src: ['test/fixtures/shim/a.js', 'test/fixtures/shim/shim.js'],
+        dest: 'tmp/shimNoParse.js',
+        options: {
+          noParse: ['test/fixtures/shim/jquery.js'],
+          shim: {
+            shimmedJQ: {
+              path: 'test/fixtures/shim/jquery.js',
+              exports: '$'
+            }
+          }
+        }
+      },
       sourceMaps: {
         src: ['test/fixtures/basic/*.js'],
         dest: 'tmp/sourceMaps.js',
         options: {
           debug: true
+        }
+      },
+
+      postBundleCB: {
+        src: ['test/fixtures/basic/*.js'],
+        dest: 'tmp/post.js',
+        options: {
+          postBundleCB: function(err, src, done) {
+            require('fs').appendFileSync('tmp/post.txt', 'Hello World!')
+            done();
+          }
         }
       }
     },

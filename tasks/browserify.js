@@ -2,6 +2,7 @@
 
 var fs = require('fs');
 var path = require('path');
+var through = require('through');
 
 /*
  * grunt-browserify
@@ -15,17 +16,24 @@ var shim = require('browserify-shim');
 
 module.exports = function (grunt) {
   grunt.registerMultiTask('browserify', 'Grunt task for browserify.', function () {
-    var opts = this.options();
+    var task = this;
+    var opts;
     var ctorOpts = {};
     var shims;
 
 
     grunt.util.async.forEachSeries(this.files, function (file, next) {
       var aliases;
+      opts = task.options();
 
       ctorOpts.entries = grunt.file.expand({filter: 'isFile'}, file.src).map(function (f) {
         return path.resolve(f);
       });
+
+      if (opts.extensions) {
+        ctorOpts.extensions = opts.extensions;
+        delete opts.extensions;
+      }
 
       if (opts.noParse) {
         ctorOpts.noParse = opts.noParse.map(function (filePath) {
@@ -105,11 +113,37 @@ module.exports = function (grunt) {
 
       if (opts.shim) {
         shims = opts.shim;
-        Object.keys(shims)
-          .forEach(function (alias) {
-            shims[alias].path = path.resolve(shims[alias].path);
+        var noParseShimExists = false;
+        var shimPaths = Object.keys(shims)
+          .map(function (alias) {
+            var shimPath = path.resolve(shims[alias].path);
+            shims[alias].path = shimPath;
+            if (!noParseShimExists) {
+              noParseShimExists = ctorOpts.noParse && ctorOpts.noParse.indexOf(shimPath) > -1;
+            }
+            return shimPath;
           });
         b = shim(b, shims);
+        if (noParseShimExists) {
+          var shimmed = [];
+          b.transform(function (file) {
+            if (shimmed.indexOf(file) < 0 &&
+                ctorOpts.noParse.indexOf(file) > -1 &&
+                shimPaths.indexOf(file) > -1) {
+              shimmed.push(file);
+              var data = 'var global=self;';
+              var write = function (buffer) {
+                return data += buffer;
+              };
+              var end = function () {
+                this.queue(data);
+                this.queue(null);
+              };
+              return through(write, end);
+            }
+            return through();
+          });
+        }
       }
 
       if (opts.external) {
@@ -186,7 +220,7 @@ module.exports = function (grunt) {
         grunt.file.mkdir(destPath);
       }
 
-      b.bundle(opts, function (err, src) {
+      var onBundleComplete = function (err, src) {
         if (err) {
           grunt.fail.warn(err);
         }
@@ -194,8 +228,18 @@ module.exports = function (grunt) {
         grunt.file.write(file.dest, src);
         grunt.log.ok('Bundled ' + file.dest);
         next();
+      };
+
+      b.bundle(opts, function (err, src) {
+        if (opts.postBundleCB) {
+          opts.postBundleCB(err, src, onBundleComplete);
+        }
+        else {
+          onBundleComplete(err, src);
+        }
       });
 
     }, this.async());
   });
 };
+

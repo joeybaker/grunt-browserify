@@ -13,7 +13,7 @@ function compareOutputs(fn1, fn2) {
   return (grunt.util.normalizelf(fn1.toString()) === grunt.util.normalizelf(fn2.toString()));
 }
 
-function moduleExported(context, modulePath) {
+function moduleExported(context, modulePath, extension) {
   var module = modulePath.match(/(\w+)\.js/)[1];
   return compareOutputs(context.exports[module], require(modulePath));
 }
@@ -205,6 +205,17 @@ module.exports = {
 
   },
 
+  extensions: function (test) {
+    test.expect(2);
+    var context = getIncludedModules('tmp/extensions.js');
+
+    test.ok(moduleExported(context, './fixtures/extensions/a.js'));
+    var bPath = './fixtures/extensions/b.fjs';
+    test.ok(compareOutputs(context.exports['b'], require(bPath)));
+
+    test.done();
+  },
+
   noParse: function (test) {
     test.expect(2);
 
@@ -231,11 +242,48 @@ module.exports = {
     test.done();
   },
 
+  shimMulti: function (test) {
+    test.expect(4);
+
+    ['tmp/shim-a.js', 'tmp/shim-b.js'].forEach(function (file) {
+      var context = getIncludedModules(file, domWindow());
+
+      test.ok(moduleExported(context, './fixtures/shim/a.js'));
+
+      //jquery is defined on the window
+      test.ok(context.window.$);
+    });
+
+    test.done();
+  },
+
+  shimNoParse: function (test) {
+    test.expect(2);
+
+    var context = getIncludedModules('tmp/shimNoParse.js', domWindow());
+
+    test.ok(moduleExported(context, './fixtures/shim/a.js'));
+
+    //jquery is defined on the window
+    test.ok(context.window.$);
+
+    test.done();
+  },
+
   sourceMaps: function (test) {
     test.expect(1);
 
     var actual = readFile('tmp/sourceMaps.js');
     test.ok(actual.match(/\/\/@ sourceMappingURL=/));
+
+    test.done();
+  },
+
+  postCallback: function(test) {
+    test.expect(1);
+
+    var actual = readFile('tmp/post.txt');
+    test.ok(actual === 'Hello World!');
 
     test.done();
   }

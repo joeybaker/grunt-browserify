@@ -1,7 +1,7 @@
 {
   "name": "grunt-browserify",
   "description": "Grunt task for node-browserify",
-  "version": "1.2.4",
+  "version": "1.2.8",
   "homepage": "https://github.com/jmreidy/grunt-browserify",
   "contributors": [
     {
@@ -30,16 +30,18 @@
     "test": "grunt test"
   },
   "dependencies": {
-    "browserify": "~2.27.0",
-    "browserify-shim": "~2.0.8"
+    "browserify-shim": "~2.0.8",
+    "through": "~2.3.4"
   },
   "devDependencies": {
+    "browserify": "~2.33",
     "grunt-contrib-jshint": "0.1.x",
     "grunt-contrib-clean": "~0.4.0",
     "grunt-contrib-nodeunit": "~0.2.0",
     "jsdom": "~0.6.0"
   },
   "peerDependencies": {
+    "browserify": "~2.33",
     "grunt": "~0.4.0"
   },
   "keywords": [
